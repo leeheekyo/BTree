@@ -164,12 +164,7 @@ void BTreeNode::remove(int k){
 
                 // 삭제 후 idx의 자식 노드에 최소 값 이하의 값이 있으면 채움
                 if( C[idx]->n < MIN_NODE ){
-                    if( C[idx+1]->n > MIN_NODE ){
-                        borrowFromNext(idx);
-                    }
-                    else{
-                        merge(idx);
-                    }
+                    merge(idx);
                 }
             }
         }
@@ -330,15 +325,22 @@ void BTreeNode::merge(int idx){
     l->n += r_cnt+1;
     n--;
 
-    // 가리키는 값 제거. split 호출 시 새로 할당 
+    
+    // 가리키는 값 제거(자식노드는 l에서 계속 사용). split 호출 시 새로 할당 
+	delete(r->keys);
     delete(r);
-
-    //root일 경우 추가 작업 수행
+    
+    // root일 경우 추가 작업 수행
     if( n == 0 ){
-    	*(this) = *(l);
+    	// 현재 키는 더이상 사용 안하므로 제거. split 호출 시 새로 할당 
+    	delete(keys);
 		
-		// 가리키는 값 제거. split 호출 시 새로 할당
+		// 현재 주소 값 이동. 
+        *(this) = *(l);
+        
+        // l 포인터는 더 이상 사용하지 않는 것으로 처리 
         delete(l);
+        
     }
 }
 
@@ -535,7 +537,9 @@ void BTree::remove(int k){
         // 삭제 후 root의 node의 키 값의 개수가 0일 경우 첫 번째 자식노드를 root로 설정
         if(root->n==0){
             // 기존 루트 삭제
-            delete root;
+            delete(root->keys); 
+            delete(root);
+            root = NULL;
         }
     }
 }
@@ -568,6 +572,9 @@ int main(){
     t.remove(17);
     t.traverse();
     cout << endl;
-    
+
+    for( int i = 1; i <= 17; i++)
+        t.remove(i);
+
     return 0;
 }
